@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Saji — Smart Waiter & Kitchen Orchestration (Prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f5;--card:#fff;--ink:#14201d;--mute:#64748b;--line:#e2e8e5;--pri:#0f766e;--pri2:#ccfbf1;--amb:#b45309;--amb2:#fef3c7;--red:#b91c1c;--red2:#fee2e2;--grn:#15803d;--grn2:#dcfce7;--blu:#1d4ed8;--blu2:#dbeafe;--shadow:0 1px 2px rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.04)}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+button{font-family:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:13px;color:var(--ink)}
+button:hover{border-color:#94a3b8}
+button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+button.pri{background:var(--pri);color:#fff;border-color:var(--pri);font-weight:600}
+button.warn.on{background:var(--red);border-color:var(--red)}
+button:disabled{opacity:.45;cursor:not-allowed}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;padding:12px 20px;background:#0b3b36;color:#fff}
+.brand b{font-size:20px;letter-spacing:-.5px}.brand span{display:block;font-size:11px;opacity:.7}
+.clock{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;background:rgba(255,255,255,.1);padding:4px 12px;border-radius:8px}
+.speed{display:flex;gap:4px}.speed button{background:transparent;color:#fff;border-color:rgba(255,255,255,.3);padding:4px 9px}
+.speed button.on{background:#fff;color:#0b3b36}
+.kpis{display:flex;gap:16px;margin-left:auto}.kpi{font-size:11px;opacity:.75}.kpi b{display:block;font-size:17px;opacity:1}
+.scen{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 20px;background:#fff;border-bottom:1px solid var(--line)}
+.scen .lbl{font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+nav{display:flex;gap:2px;padding:0 20px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{border:none;border-bottom:3px solid transparent;border-radius:0;padding:12px 14px;font-weight:600;color:var(--mute);background:none;white-space:nowrap}
+nav button.on{color:var(--pri);border-bottom-color:var(--pri);background:none}
+main{padding:18px 20px 40px}
+.grid2{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
+@media(max-width:980px){.grid2{grid-template-columns:1fr}}
+.phone{background:#111;border-radius:34px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.screen{background:var(--bg);border-radius:24px;overflow:hidden;height:760px;display:flex;flex-direction:column}
+.ph-top{background:#fff;padding:12px 14px 8px;border-bottom:1px solid var(--line)}
+.ph-top .tt{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.pills{display:flex;gap:5px;overflow-x:auto;padding:8px 0 2px}.pills button{padding:4px 9px;border-radius:999px;font-size:12px;white-space:nowrap}
+.menu{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+.card.off{opacity:.6;background:#f8fafc}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.price{color:var(--mute);font-size:12px;white-space:nowrap}
+.eta{font-weight:800;font-size:13px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.eta.f{background:var(--grn2);color:var(--grn)}.eta.m{background:var(--amb2);color:var(--amb)}.eta.s{background:var(--red2);color:var(--red)}
+.chip{display:inline-block;font-size:11px;padding:2px 7px;border-radius:999px;background:#f1f5f9;color:#334155;margin:4px 4px 0 0}
+.chip.r{background:var(--red2);color:var(--red)}.chip.a{background:var(--amb2);color:var(--amb)}.chip.g{background:var(--grn2);color:var(--grn)}.chip.b{background:var(--blu2);color:var(--blu)}
+.mute{color:var(--mute);font-size:12px}
+.cart{background:#fff;border-top:2px solid var(--line);padding:10px 12px;max-height:330px;overflow-y:auto}
+.line{border-bottom:1px dashed var(--line);padding:6px 0}
+.qty{display:flex;align-items:center;gap:4px}.qty button{padding:1px 8px}
+.mods button{font-size:11px;padding:2px 7px;margin:4px 4px 0 0;border-radius:999px}
+.tot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+.big{font-size:22px;font-weight:800}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.panel h3{margin:0 0 10px;font-size:15px}
+.guest{background:linear-gradient(160deg,#0b3b36,#115e59);color:#fff;border-radius:16px;padding:22px}
+.guest h2{margin:0 0 4px}.guest .gl{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.15)}
+.guest .gbig{font-size:34px;font-weight:800;margin-top:12px}
+.kitchen{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.col{background:#fff;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:300px}
+.col h4{margin:0;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.col .body{padding:8px;display:flex;flex-direction:column;gap:6px}
+.tk{border:1px solid var(--line);border-left:4px solid #94a3b8;border-radius:8px;padding:7px 9px;font-size:12px}
+.tk.cook{border-left-color:var(--pri);background:#f0fdfa}.tk.wait{border-left-color:var(--amb)}.tk.over{border-left-color:var(--red);background:#fff5f5}.tk.rdy{border-left-color:var(--grn);background:#f0fdf4}
+.bar{height:5px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;background:var(--pri)}
+.sect{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mute);letter-spacing:.5px;margin:4px 2px 0}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;color:var(--mute);letter-spacing:.4px}
+.lvl{height:8px;width:120px;background:#e2e8f0;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}.lvl i{display:block;height:100%}
+.floor{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tbl{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.tbl.slip{border-color:var(--red);box-shadow:0 0 0 2px var(--red2)}
+.log{font-family:ui-monospace,Menlo,monospace;font-size:12px;max-height:380px;overflow-y:auto;background:#0f172a;color:#cbd5e1;border-radius:10px;padding:10px}
+.log div{padding:2px 0}.log b{color:#5eead4}
+.formula{font-family:ui-monospace,Menlo,monospace;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;white-space:pre-wrap}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0b3b36;color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9}
+#toast.show{opacity:1}
+.empty{color:var(--mute);font-size:12px;padding:10px;text-align:center}
+.tblwrap{overflow-x:auto}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+nav{position:sticky;top:0;z-index:5}
+/* ---------- mobile ---------- */
+@media(max-width:700px){
+  body{font-size:15px}
+  header{padding:10px 12px;gap:8px 10px}
+  .brand span{display:none}
+  .clock{font-size:18px;padding:3px 9px}
+  .speed{margin-left:auto}.speed button{padding:6px 9px}
+  .kpis{width:100%;margin-left:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .kpi{font-size:10px}.kpi b{font-size:15px}
+  .scen{flex-wrap:nowrap;overflow-x:auto;padding:8px 12px;-webkit-overflow-scrolling:touch}
+  .scen button{white-space:nowrap;flex:0 0 auto}
+  nav{padding:0 6px}nav button{padding:11px 10px;font-size:13px}
+  main{padding:10px 10px 30px}
+  html,body{overflow-x:hidden}
+  .grid2{gap:12px;grid-template-columns:minmax(0,1fr)}
+  .grid2>div,.screen,.ph-top,.pills{min-width:0;max-width:100%}
+  .phone{background:none;border-radius:0;padding:0;box-shadow:none}
+  .screen{height:auto;border-radius:14px;overflow:visible;border:1px solid var(--line)}
+  .ph-top{border-radius:14px 14px 0 0}
+  .ph-top .tt{display:none}
+  .menu{overflow:visible;padding:8px}
+  .cart{position:sticky;bottom:0;max-height:55vh;border-radius:14px 14px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.1);z-index:4}
+  .pills button{padding:7px 11px;font-size:13px}
+  .card button.pri,.card button{padding:9px 10px}
+  .qty button{padding:5px 12px;font-size:15px}
+  .mods button{padding:6px 10px;font-size:12px}
+  .big{font-size:19px}
+  .guest{padding:16px}.guest .gbig{font-size:28px}
+  .kitchen,.floor{grid-template-columns:1fr}
+  .col{min-height:0}
+  .g3{grid-template-columns:1fr}
+  .panel{padding:12px}
+  th,td{padding:6px 5px;font-size:12px}
+  .lvl{width:60px}
+  .log{max-height:300px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>Saji</b><span>Smart waiter &amp; kitchen orchestration · working prototype</span></div>
+  <div class="clock" id="clock"></div>
+  <div class="speed" id="speed"></div>
+  <div class="kpis" id="kpis"></div>
+</header>
+<div class="scen" id="scen"></div>
+<nav id="tabs"></nav>
+<main id="view"></main>
+<div id="toast"></div>
+<script>
+/* =========================================================
+   SAJI — ETA + sequencing engine (all logic client-side)
+   Time unit: simulated minutes since 11:30
+   ========================================================= */
+const START = 11*60+30;
+const ING_DEF = { // p=prepped r=raw f=frozen pt=prep min pb=prep batch tt=thaw min th=auto-prep threshold
+  rice:{n:'Nasi putih (cooked)',u:'ptn',p:14,r:60,f:0,pt:25,pb:30,tt:0,th:10},
+  chicken:{n:'Ayam (marinated)',u:'pc',p:8,r:6,f:20,pt:6,pb:6,tt:30,th:5},
+  gurame:{n:'Gurame (cleaned)',u:'pc',p:1,r:3,f:0,pt:8,pb:2,tt:0,th:0},
+  kakap:{n:'Kakap (cleaned)',u:'pc',p:3,r:4,f:0,pt:7,pb:2,tt:0,th:2},
+  udang:{n:'Udang (thawed)',u:'ptn',p:2,r:0,f:24,pt:3,pb:6,tt:20,th:0},
+  cumi:{n:'Cumi (cleaned)',u:'ptn',p:6,r:8,f:0,pt:6,pb:4,tt:0,th:3},
+  sambal:{n:'Sambal (ground)',u:'ptn',p:18,r:40,f:0,pt:10,pb:20,tt:0,th:8},
+  rendang:{n:'Rendang (pre-cooked batch)',u:'ptn',p:3,r:12,f:0,pt:90,pb:12,tt:0,th:0},
+  soto:{n:'Soto broth (batch)',u:'ptn',p:10,r:20,f:0,pt:45,pb:20,tt:0,th:4},
+  noodle:{n:'Mie (blanched)',u:'ptn',p:12,r:30,f:0,pt:5,pb:10,tt:0,th:5},
+  egg:{n:'Telur',u:'pc',p:40,r:0,f:0,pt:0,pb:0,tt:0,th:0},
+  veg:{n:'Kangkung (washed)',u:'ptn',p:4,r:8,f:0,pt:5,pb:4,tt:0,th:2},
+  tea:{n:'Teh (brewed)',u:'gls',p:30,r:40,f:0,pt:8,pb:30,tt:0,th:10},
+  avocado:{n:'Alpukat (ripe)',u:'pc',p:2,r:0,f:0,pt:0,pb:0,tt:0,th:0},
+  orange:{n:'Jeruk',u:'pc',p:20,r:0,f:0,pt:0,pb:0,tt:0,th:0}
+};
+const MENU = [ // ct=cook min pl=plating min bm=max batch
+  {k:'nasgor',n:'Nasi Goreng Spesial',c:'Wok',st:'wok',ct:6,pl:1,bm:3,price:45000,rec:{rice:1,egg:1,sambal:1},spice:1},
+  {k:'miegor',n:'Mie Goreng Jawa',c:'Wok',st:'wok',ct:6,pl:1,bm:3,price:42000,rec:{noodle:1,egg:1,sambal:1},spice:1},
+  {k:'kangkung',n:'Cah Kangkung',c:'Wok',st:'wok',ct:4,pl:1,bm:2,price:30000,rec:{veg:1,sambal:1},spice:1},
+  {k:'ayambakar',n:'Ayam Bakar Taliwang',c:'Grill',st:'grill',ct:12,pl:1,bm:1,price:58000,rec:{chicken:1,sambal:1,rice:1},spice:1,wd:1},
+  {k:'cumibakar',n:'Cumi Bakar',c:'Grill',st:'grill',ct:9,pl:1,bm:1,price:65000,rec:{cumi:1,sambal:1},spice:1,wd:1},
+  {k:'udangbakar',n:'Udang Bakar Madu',c:'Grill',st:'grill',ct:8,pl:1,bm:1,price:85000,rec:{udang:2,sambal:1},spice:1,wd:1},
+  {k:'gurame',n:'Gurame Goreng Kipas',c:'Fryer',st:'fryer',ct:14,pl:2,bm:1,price:120000,rec:{gurame:1,sambal:1},sub:'kakap',spice:1},
+  {k:'kakap',n:'Kakap Goreng Sambal Matah',c:'Fryer',st:'fryer',ct:12,pl:2,bm:1,price:110000,rec:{kakap:1,sambal:1},spice:1},
+  {k:'ayamgoreng',n:'Ayam Goreng Kremes',c:'Fryer',st:'fryer',ct:9,pl:1,bm:3,price:48000,rec:{chicken:1,rice:1}},
+  {k:'rendang',n:'Rendang Sapi',c:'Hot pass',st:'hot',ct:3,pl:1,bm:4,price:62000,rec:{rendang:1,rice:1},sub:'ayambakar'},
+  {k:'soto',n:'Soto Ayam',c:'Hot pass',st:'hot',ct:3,pl:1,bm:4,price:38000,rec:{soto:1,rice:1}},
+  {k:'esteh',n:'Es Teh Manis',c:'Drinks',st:'drinks',ct:1,pl:0,bm:4,price:12000,rec:{tea:1},drink:1,less:1},
+  {k:'alpukat',n:'Jus Alpukat',c:'Drinks',st:'drinks',ct:3,pl:0,bm:2,price:28000,rec:{avocado:1},drink:1,sub:'jeruk',less:1},
+  {k:'jeruk',n:'Es Jeruk',c:'Drinks',st:'drinks',ct:2,pl:0,bm:3,price:18000,rec:{orange:1},drink:1,less:1}
+];
+const DISH = Object.fromEntries(MENU.map(d=>[d.k,d]));
+const ST_DEF = { // per = items one cook runs in parallel; speed = hidden real-world factor the model must learn
+  wok:{n:'Wok',slots:3,cooks:2,per:1,speed:1.15},
+  grill:{n:'Grill',slots:6,cooks:1,per:5,speed:1.0},
+  fryer:{n:'Fryer',slots:3,cooks:1,per:3,speed:0.95},
+  hot:{n:'Hot pass',slots:3,cooks:1,per:3,speed:1.0},
+  drinks:{n:'Drinks',slots:2,cooks:1,per:2,speed:1.0}
+};
+const TABLES = {T1:{zone:'Indoor',run:1},T2:{zone:'Indoor',run:1},T3:{zone:'Indoor',run:1},T4:{zone:'Indoor',run:1},
+  T5:{zone:'Outdoor',run:2},T6:{zone:'Outdoor',run:2},VIP:{zone:'VIP room',run:3},
+  GoFood:{zone:'Delivery pickup',run:0,del:1},GrabFood:{zone:'Delivery pickup',run:0,del:1}};
+const SPICE = ['Tidak pedas','Sedang','Pedas','Pedas++','Level 5 🔥'];
+
+let S;
+function init(){
+  S = {t:0,speed:30,paused:false,ing:{},st:{},tasks:[],orders:[],prep:[],oid:0,tid:0,pid:0,bid:0,learn:{},log:[],stats:[],
+    cfg:{strategy:'sync',maxWait:6,throttle:1.3,throttleDelay:8},auto:{rush:false,delivery:false},
+    sc:{jumat:false,lpg:false,burner:false},lpgFixAt:null,tab:(S&&S.tab)||'waiter',nextRush:2,nextDel:1};
+  for(const k in ING_DEF) S.ing[k]={...ING_DEF[k],lane:0};
+  for(const k in ST_DEF) S.st[k]={...ST_DEF[k],down:0,lpgOut:false};
+  MENU.forEach(d=>S.learn[d.k]=1);
+  log('Service opened. Engine strategy: <b>Table-sync</b>.');
+}
+const W = {table:'T1',cat:'All',cart:[],mode:'together'};
+
+/* ---------- utilities ---------- */
+const clock = t => {const m=Math.floor(START+t);return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');};
+const rp = n => 'Rp '+n.toLocaleString('id-ID');
+const r0 = x => Math.max(0,Math.round(x));
+const fin = x => Number.isFinite(x);
+const rng = (a,b) => fin(a)? `${r0(a)}–${Math.ceil(b)} min` : 'station down';
+function log(m){S.log.unshift(`<span style="color:#94a3b8">${clock(S.t)}</span> ${m}`); if(S.log.length>120) S.log.pop();}
+let toastT; function toast(m){const e=document.getElementById('toast'); if(!e) return; e.textContent=m; e.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove('show'),2200);}
+
+/* ---------- capacity ---------- */
+function cap(s){const st=S.st[s]; if(st.lpgOut) return 0; return Math.max(0,Math.min(st.slots-st.down, st.cooks*st.per));}
+function load(){let n=0,c=0; for(const s in S.st){ if(s==='drinks') continue; c+=cap(s); n+=S.tasks.filter(t=>t.st===s&&(t.state==='queued'||t.state==='cooking')).length;} return c? n/c : 9.99;}
+const estDur = (d,m) => d.ct*(S.learn[d.k]||1)+(m&&m.wd?2:0);
+
+/* ---------- ingredient readiness: prepped / raw->prep / frozen->thaw+prep / batch ---------- */
+function reasonOf(g,src){ return src==='frozen'?'thaw':(g.pt>=30?'new batch':'prep'); }
+function planIng(k,qty,commit){
+  const g=S.ing[k]; let have=g.p, t=S.t, reason=null;
+  if(have>=qty){ if(commit) g.p-=qty; return {ok:true,readyAt:S.t,reason:null}; }
+  const jobs=S.prep.filter(j=>j.ing===k&&j.state!=='done').sort((a,b)=>a.end-b.end);
+  for(const j of jobs){ if(have>=qty) break; have+=j.units; t=j.end; reason=reasonOf(g,j.src); }
+  let r=g.r,f=g.f,lane=Math.max(S.t,g.lane); const nj=[];
+  while(have<qty){
+    let units,dur,src;
+    if(r>0&&g.pb>0){units=Math.min(g.pb,r);r-=units;dur=g.pt;src='raw';}
+    else if(f>0&&g.pb>0){units=Math.min(g.pb,f);f-=units;dur=g.tt+g.pt;src='frozen';}
+    else return {ok:false};
+    nj.push({ing:k,units,src,start:lane,end:lane+dur}); lane+=dur; have+=units; t=lane; reason=reasonOf(g,src);
+  }
+  if(commit){
+    g.p-=qty; g.r=r; g.f=f; g.lane=lane;
+    nj.forEach(j=>{S.prep.push({...j,id:++S.pid,state:'queued',auto:false}); log(`Prep triggered by order: ${j.src==='frozen'?'thaw + prep':reasonOf(g,j.src)} ${j.units} ${g.u} <b>${g.n}</b> (ready ${clock(j.end)})`);});
+  }
+  return {ok:true,readyAt:t,reason};
+}
+function pendingUnits(k){return S.prep.filter(j=>j.ing===k&&j.state!=='done').reduce((a,j)=>a+j.units,0);}
+function cartNeed(k){return W.cart.reduce((a,l)=>a+(DISH[l.k].rec[k]||0)*l.qty,0);}
+function portions(d,useCart=true){
+  let m=Infinity;
+  for(const ik in d.rec){const g=S.ing[ik]; const net=g.p+pendingUnits(ik)+(g.pb>0?g.r+g.f:0)-(useCart?cartNeed(ik):0); m=Math.min(m,Math.floor(net/d.rec[ik]));}
+  return Math.max(0,m);
+}
+
+/* ---------- station projection: capacity-aware forward simulation of the queue ---------- */
+function sortKey(a){ return Math.max(a.fireAt,a.readyAt); }
+function projectStation(s,extra=[]){
+  const c=cap(s);
+  const queued=S.tasks.filter(t=>t.st===s&&t.state==='queued');
+  if(c===0){ queued.forEach(t=>{t.projStart=Infinity;t.projEnd=Infinity;}); return extra.map(()=>({start:Infinity,end:Infinity})); }
+  const b={}; S.tasks.filter(t=>t.st===s&&t.state==='cooking').forEach(t=>{b[t.batch]=Math.max(b[t.batch]||0,Math.max(S.t+0.2,t.estEnd));});
+  let slots=Object.values(b).sort((x,y)=>x-y);
+  while(slots.length>c){const a=slots.shift(); slots[0]=Math.max(slots[0],a);}
+  while(slots.length<c) slots.push(S.t);
+  const all=queued.map(t=>({task:t,dur:t.estDur,readyAt:t.readyAt,fireAt:t.fireAt,ex:0}))
+    .concat(extra.map((e,i)=>({...e,i,ex:1})));
+  all.sort((x,y)=> S.cfg.strategy==='sjf' ? (Math.max(x.readyAt,S.t)-Math.max(y.readyAt,S.t))||(x.dur-y.dur) : (sortKey(x)-sortKey(y))||(x.ex-y.ex));
+  const res=[];
+  for(const a of all){
+    slots.sort((x,y)=>x-y);
+    const start=Math.max(slots[0],a.fireAt,a.readyAt,S.t), end=start+a.dur; slots[0]=end;
+    if(a.ex) res[a.i]={start,end}; else {a.task.projStart=start; a.task.projEnd=end+DISH[a.task.k].pl;}
+  }
+  return res;
+}
+function projectAll(){ for(const s in S.st) projectStation(s); }
+
+/* ---------- ETA estimate for a set of order units ---------- */
+function estimate(units,table,delay=0){
+  const used={}, per=[]; let ok=true;
+  for(const u of units){
+    const d=DISH[u.k]; let ready=S.t, why=null, good=true;
+    for(const ik in d.rec){ used[ik]=(used[ik]||0)+d.rec[ik]; const r=planIng(ik,used[ik],false);
+      if(!r.ok){good=false;break;} if(r.readyAt>ready+0.01){ready=r.readyAt; why=`${r.reason}: ${S.ing[ik].n}`;} }
+    if(!good) ok=false;
+    per.push({u,d,ok:good,ready,why,dur:estDur(d,u.mods),fire:S.t+delay});
+  }
+  const by={}; per.forEach(p=>(by[p.d.st]=by[p.d.st]||[]).push(p));
+  for(const s in by){ const r=projectStation(s,by[s].map(p=>({dur:p.dur,readyAt:p.ready,fireAt:p.fire})));
+    by[s].forEach((p,i)=>{p.start=r[i].start; p.done=r[i].end+p.d.pl; p.wait=fin(p.start)?Math.max(0,p.start-Math.max(S.t+delay,p.ready)):Infinity;}); }
+  const run=TABLES[table].run, food=per.filter(p=>!p.d.drink), base=food.length?food:per;
+  const last=base.length?Math.max(...base.map(p=>p.done)):S.t;
+  const p50=last+run-S.t, p90=p50*1.2+2;
+  return {ok,per,p50,p90,run,last};
+}
+
+/* ---------- place order: reserve stock, compute fire times ---------- */
+function placeOrder(table,units,mode){
+  const del=!!TABLES[table].del, throttled=del&&load()>S.cfg.throttle, delay=throttled?S.cfg.throttleDelay:0;
+  if(!units.length) return null;
+  const est=estimate(units,table,delay); if(!est.ok||!fin(est.p50)||est.per.some(p=>!fin(p.done))) return null;
+  const o={id:++S.oid,table,channel:del?'delivery':'dine-in',mode:del?'together':mode,created:S.t,p50:est.p50,p90:est.p90,throttled,strategy:S.cfg.strategy};
+  S.orders.push(o);
+  for(const p of est.per){
+    let ready=S.t; for(const ik in p.d.rec){const r=planIng(ik,p.d.rec[ik],true); ready=Math.max(ready,r.readyAt);}
+    let fire=S.t+delay;
+    if(S.cfg.strategy==='sync'&&o.mode==='together'&&!p.d.drink) fire=Math.max(fire,est.last-p.d.pl-p.dur);
+    S.tasks.push({id:++S.tid,order:o.id,table,k:p.d.k,st:p.d.st,mods:p.u.mods||{},readyAt:ready,fireAt:fire,estDur:p.dur,why:p.why,state:'queued',created:S.t});
+  }
+  log(`Order #${o.id} <b>${table}</b> (${units.length} items, ${o.mode==='together'?'serve together':'as ready'}) — promised ${rng(o.p50,o.p90)}${throttled?` · <b>throttled +${delay}m</b> (kitchen load ${Math.round(load()*100)}%)`:''}`);
+  return o;
+}
+
+/* ---------- dispatcher: decides what each station cooks next ---------- */
+function overdue(t){return S.cfg.strategy==='sync' && S.t-t.fireAt>S.cfg.maxWait;}
+function cmp(a,b){
+  const s=S.cfg.strategy;
+  if(s==='fifo') return a.created-b.created||a.id-b.id;
+  if(s==='sjf') return a.estDur-b.estDur||a.created-b.created;
+  return (overdue(b)-overdue(a))||(a.fireAt-b.fireAt)||(a.created-b.created);
+}
+function dispatch(){
+  for(const s in S.st){
+    const c=cap(s); let busy=new Set(S.tasks.filter(t=>t.st===s&&t.state==='cooking').map(t=>t.batch)).size;
+    while(busy<c){
+      const cand=S.tasks.filter(t=>t.st===s&&t.state==='queued'&&t.fireAt<=S.t+1e-6&&t.readyAt<=S.t+1e-6);
+      if(!cand.length) break;
+      cand.sort(cmp); const lead=cand[0], d=DISH[lead.k], grp=[lead];
+      if(d.bm>1){
+        for(const t of cand) if(grp.length<d.bm&&t!==lead&&t.k===lead.k&&!!t.mods.wd===!!lead.mods.wd) grp.push(t);
+        if(S.cfg.strategy==='sync') for(const t of S.tasks) if(grp.length<d.bm&&t.st===s&&t.state==='queued'&&!grp.includes(t)&&t.k===lead.k&&t.readyAt<=S.t&&t.fireAt<=S.t+3) grp.push(t);
+      }
+      const n=grp.length, bf=1+0.25*(n-1), st=S.st[s];
+      const actual=d.ct*st.speed*(0.88+Math.random()*0.3)*bf+(lead.mods.wd?2:0)+d.pl;
+      const est=lead.estDur*bf+d.pl, bid=++S.bid;
+      if(overdue(lead)) log(`⚠ Max-wait cap hit: <b>${d.n}</b> (${lead.table}) promoted to front of ${st.n}`);
+      grp.forEach(t=>{t.state='cooking';t.batch=bid;t.startAt=S.t;t.endAt=S.t+actual;t.estEnd=S.t+est;t.bn=n;});
+      if(n>1) log(`Batched <b>${n}× ${d.n}</b> on ${st.n} (tables ${[...new Set(grp.map(t=>t.table))].join(', ')})`);
+      busy++;
+    }
+  }
+}
+
+/* ---------- simulation tick ---------- */
+function makeAutoPrep(k){
+  const g=S.ing[k]; let units,dur,src;
+  if(g.r>0&&g.pb>0){units=Math.min(g.pb,g.r);g.r-=units;dur=g.pt;src='raw';}
+  else if(g.f>0&&g.pb>0){units=Math.min(g.pb,g.f);g.f-=units;dur=g.tt+g.pt;src='frozen';}
+  else return null;
+  const start=Math.max(S.t,g.lane); g.lane=start+dur;
+  const j={id:++S.pid,ing:k,units,src,start,end:start+dur,state:'queued',auto:true}; S.prep.push(j); return j;
+}
+function randomUnits(n,drinks=true){
+  const pool=MENU.filter(d=>portions(d,false)>0&&cap(d.st)>0&&(drinks||!d.drink)); const u=[];
+  for(let i=0;i<n&&pool.length;i++){const d=pool[Math.floor(Math.random()*pool.length)]; u.push({k:d.k,mods:{spice:Math.floor(Math.random()*4)}});}
+  return u;
+}
+function tick(dt){
+  S.t+=dt;
+  for(const j of S.prep){
+    if(j.state==='queued'&&S.t>=j.start) j.state='running';
+    if(j.state==='running'&&S.t>=j.end){ j.state='done'; S.ing[j.ing].p+=j.units; log(`✔ Prep done: +${j.units} ${S.ing[j.ing].u} <b>${S.ing[j.ing].n}</b>`); }
+  }
+  S.prep=S.prep.filter(j=>j.state!=='done'||S.t-j.end<15);
+  for(const k in S.ing){ const g=S.ing[k]; if(!g.th) continue;
+    const pend=S.prep.filter(j=>j.ing===k&&j.state!=='done');
+    if(g.p+pendingUnits(k)<g.th && !pend.some(j=>j.auto)){ const j=makeAutoPrep(k); if(j) log(`🔁 Auto-prep: <b>${g.n}</b> below threshold (${g.th}) → ${j.src==='frozen'?'thaw + prep':reasonOf(g,j.src)} ${j.units}, ready ${clock(j.end)}`); } }
+  const seen=new Set();
+  for(const t of S.tasks) if(t.state==='cooking'&&S.t>=t.endAt){
+    t.state='ready'; t.readyTime=t.endAt;
+    if(!seen.has(t.batch)&&!t.bumped){ seen.add(t.batch); const d=DISH[t.k]; const bf=1+0.25*((t.bn||1)-1);
+      const ratio=(t.endAt-t.startAt-d.pl-(t.mods.wd?2:0))/bf/d.ct; if(ratio>0.3&&ratio<3) S.learn[t.k]=+(0.8*S.learn[t.k]+0.2*ratio).toFixed(3); }
+  }
+  if(S.lpgFixAt!=null&&S.t>=S.lpgFixAt){S.st.wok.lpgOut=false;S.sc.lpg=false;S.lpgFixAt=null;log('🔥 LPG cylinder swapped — wok back online');}
+  dispatch();
+  for(const o of S.orders){ if(o.served!=null) continue;
+    const ts=S.tasks.filter(t=>t.order===o.id), run=TABLES[o.table].run;
+    for(const t of ts) if(t.state==='ready'&&(DISH[t.k].drink||o.mode==='asready')&&S.t>=t.readyTime+run){t.state='served';t.servedAt=S.t;}
+    if(o.mode==='together'){ const food=ts.filter(t=>!DISH[t.k].drink);
+      if(food.length&&food.every(t=>t.state==='ready'||t.state==='served')){
+        if(o.allReadyAt==null){o.allReadyAt=S.t; if(!TABLES[o.table].del) log(`🔔 <b>${o.table}</b>: all food at the pass — runner buzzed`);}
+        if(S.t>=o.allReadyAt+run) food.forEach(t=>{if(t.state==='ready'){t.state='served';t.servedAt=S.t;}});
+      } }
+    if(ts.length&&ts.every(t=>t.state==='served')){
+      o.served=S.t; const food=ts.filter(t=>!DISH[t.k].drink), base=food.length?food:ts;
+      const dur=Math.max(...base.map(t=>t.servedAt))-o.created;
+      const hold=base.reduce((a,t)=>a+Math.max(0,t.servedAt-t.readyTime-run),0)/base.length;
+      S.stats.push({strategy:o.strategy,dur,err:dur-o.p50,on:dur<=o.p90+0.05,hold});
+      log(`${dur<=o.p90+0.05?'✅':'❌'} Order #${o.id} <b>${o.table}</b> ${TABLES[o.table].del?'picked up':'served'} in ${dur.toFixed(1)}m (promised ${rng(o.p50,o.p90)})`);
+    }
+  }
+  if(S.auto.rush&&S.t>=S.nextRush){ const tb=['T1','T2','T3','T4','T5','T6','VIP'][Math.floor(Math.random()*7)]; placeOrder(tb,randomUnits(2+Math.floor(Math.random()*4)),'together'); S.nextRush=S.t+3+Math.random()*3; }
+  if(S.auto.delivery&&S.t>=S.nextDel){ placeOrder(Math.random()<.6?'GoFood':'GrabFood',randomUnits(1+Math.floor(Math.random()*3),true),'together'); S.nextDel=S.t+2+Math.random()*3; }
+}
+
+/* =========================================================
+   UI
+   ========================================================= */
+const TABS=[['waiter','📱 Waiter handheld'],['kitchen','🍳 Kitchen display'],['prep','📦 Stock & prep'],['floor','🪑 Floor & tables'],['engine','⚙️ ETA engine']];
+function renderTop(){
+  document.getElementById('clock').textContent=clock(S.t);
+  document.getElementById('speed').innerHTML=`<button data-a="pause" class="${S.paused?'on':''}">${S.paused?'▶':'⏸'}</button>`+[1,10,30,60].map(v=>`<button data-a="speed" data-v="${v}" class="${S.speed===v&&!S.paused?'on':''}">${v}×</button>`).join('');
+  const st=S.stats.filter(x=>x.strategy===S.cfg.strategy);
+  const on=st.length?Math.round(100*st.filter(x=>x.on).length/st.length)+'%':'—';
+  const avg=st.length?(st.reduce((a,x)=>a+x.dur,0)/st.length).toFixed(1)+'m':'—';
+  document.getElementById('kpis').innerHTML=`<div class="kpi">Kitchen load<b>${Math.round(load()*100)}%</b></div><div class="kpi">Open orders<b>${S.orders.filter(o=>o.served==null).length}</b></div><div class="kpi">Avg ticket<b>${avg}</b></div><div class="kpi">Within promise<b>${on}</b></div>`;
+  document.getElementById('scen').innerHTML=`<span class="lbl">Scenarios</span>
+    <button data-a="rushnow">🍽 Rush: +4 tables</button>
+    <button data-a="auto" data-v="rush" class="${S.auto.rush?'on':''}">Peak-hour stream</button>
+    <button data-a="auto" data-v="delivery" class="${S.auto.delivery?'on':''}">🌧 Rain → GoFood/Grab stream</button>
+    <button data-a="sc" data-v="jumat" class="warn ${S.sc.jumat?'on':''}">🕌 Jumatan (1 wok cook)</button>
+    <button data-a="sc" data-v="burner" class="warn ${S.sc.burner?'on':''}">Wok burner down</button>
+    <button data-a="sc" data-v="lpg" class="warn ${S.sc.lpg?'on':''}">${S.lpgFixAt!=null?`LPG swap… ${r0(S.lpgFixAt-S.t)}m`:(S.sc.lpg?'🔥 LPG empty — swap (5m)':'🔥 LPG runs out (wok)')}</button>
+    <button data-a="reset">↺ Reset day</button>`;
+  document.getElementById('tabs').innerHTML=TABS.map(([k,n])=>`<button data-a="tab" data-v="${k}" class="${S.tab===k?'on':''}">${n}</button>`).join('');
+}
+function etaCls(m){return !fin(m)?'s':m<=10?'f':m<=20?'m':'s';}
+function expand(){const u=[]; W.cart.forEach((l,i)=>{for(let q=0;q<l.qty;q++) u.push({k:l.k,mods:l.mods,li:i});}); return u;}
+
+function viewWaiter(){
+  const cats=['All','Wok','Grill','Fryer','Hot pass','Drinks'];
+  const cards=MENU.filter(d=>W.cat==='All'||d.c===W.cat).map(d=>{
+    const left=portions(d), e=estimate([{k:d.k,mods:{}}],W.table), p=e.per[0];
+    const chips=[];
+    if(left===0) chips.push('<span class="chip r">Sold out</span>');
+    else if(left<=5) chips.push(`<span class="chip a">Only ${left} left</span>`);
+    if(left>0&&!fin(e.p50)) chips.push(`<span class="chip r">${S.st[d.st].n} station down</span>`);
+    if(left>0&&p.why) chips.push(`<span class="chip a">⏳ ${p.why} +${r0(p.ready-S.t)}m</span>`);
+    if(left>0&&fin(p.wait)&&p.wait>1.5) chips.push(`<span class="chip b">${S.st[d.st].n} busy +${r0(p.wait)}m</span>`);
+    if(left>0&&fin(e.p50)&&e.p50<=8) chips.push('<span class="chip g">⚡ Fast</span>');
+    let action='';
+    if(left===0&&d.sub){const sd=DISH[d.sub], se=estimate([{k:sd.k,mods:{}}],W.table);
+      if(portions(sd)>0) action=`<button data-a="add" data-k="${sd.k}" style="margin-top:6px;width:100%">Suggest instead: ${sd.n} · ~${fin(se.p50)?r0(se.p50):'—'}m</button>`;}
+    else if(left>0&&fin(e.p50)) action=`<button data-a="add" data-k="${d.k}" class="pri" style="margin-top:6px;width:100%">+ Add</button>`;
+    return `<div class="card ${left===0||!fin(e.p50)?'off':''}"><div class="row"><b>${d.n}</b><span class="price">${rp(d.price)}</span></div>
+      <div class="row" style="margin-top:4px"><span class="mute">${d.c}</span>${left>0?`<span class="eta ${etaCls(e.p50)}">${fin(e.p50)?'~'+r0(e.p50)+' min':'Unavailable'}</span>`:''}</div>
+      <div>${chips.join('')}</div>${action}</div>`;
+  }).join('');
+  const units=expand(), e=units.length?estimate(units,W.table):null;
+  const lines=W.cart.map((l,i)=>{
+    const d=DISH[l.k]; const ps=e?e.per.filter(p=>p.u.li===i):[]; const p=ps[ps.length-1];
+    const bd=p?`ingredients +${r0(p.ready-S.t)}m · ${S.st[d.st].n} wait ${fin(p.wait)?r0(p.wait):'∞'}m · cook ${p.dur.toFixed(0)}m · plate ${d.pl}m`:'';
+    return `<div class="line"><div class="row"><b style="font-size:13px">${d.n}</b><div class="qty"><button data-a="dec" data-i="${i}">−</button><b>${l.qty}</b><button data-a="inc" data-i="${i}">+</button></div></div>
+      <div class="mods">${d.spice?`<button data-a="spice" data-i="${i}">🌶 ${SPICE[l.mods.spice||0]}</button>`:''}${d.wd?`<button data-a="wd" data-i="${i}" class="${l.mods.wd?'on':''}">Well done +2m</button>`:''}${d.less?`<button data-a="less" data-i="${i}" class="${l.mods.less?'on':''}">Less sugar</button>`:''}</div>
+      <div class="mute" style="margin-top:3px">${p&&fin(p.done)?`<b>At pass ~${r0(p.done-S.t)}m</b> · `:''}<span style="opacity:.85">${bd}</span></div></div>`;}).join('');
+  const total=W.cart.reduce((a,l)=>a+DISH[l.k].price*l.qty,0);
+  const del=TABLES[W.table].del, thr=del&&load()>S.cfg.throttle, add=thr?S.cfg.throttleDelay:0;
+  const cart=`<div class="cart"><div class="row"><b>Order · ${W.table}</b>${!del?`<div><button data-a="mode" data-v="together" class="${W.mode==='together'?'on':''}">Serve together</button> <button data-a="mode" data-v="asready" class="${W.mode==='asready'?'on':''}">As ready</button></div>`:'<span class="chip b">Delivery</span>'}</div>
+    ${lines||'<div class="empty">Tap dishes to add. ETAs update live with stock, prep and kitchen load.</div>'}
+    ${e?`<div class="tot"><div><div class="mute">${W.mode==='together'||del?'Whole order arrives':'Last dish arrives'}${thr?' (throttled +'+add+'m)':''}</div><div class="big">${rng(e.p50+add,e.p90+add)}</div></div><div style="text-align:right"><div class="mute">${rp(total)}</div><button data-a="place" class="pri" ${e.ok&&fin(e.p50)?'':'disabled'}>Send to kitchen →</button></div></div>`:''}</div>`;
+  const phone=`<div class="phone"><div class="screen"><div class="ph-top"><div class="tt"><span>Saji · Waiter</span><span class="mute">${clock(S.t)}</span></div>
+    <div class="pills">${Object.keys(TABLES).map(t=>`<button data-a="table" data-v="${t}" class="${W.table===t?'on':''}">${t}</button>`).join('')}</div>
+    <div class="pills">${cats.map(c=>`<button data-a="cat" data-v="${c}" class="${W.cat===c?'on':''}">${c}</button>`).join('')}</div></div>
+    <div class="menu">${cards}</div>${cart}</div></div>`;
+  const guest=`<div class="guest"><div style="color:#99f6e4;font-size:12px">Guest-facing screen (waiter flips the handheld)</div><h2>Pesanan Anda · ${W.table}</h2>
+    ${W.cart.length?W.cart.map((l,i)=>{const p=e.per.filter(x=>x.u.li===i).pop();return `<div class="gl"><span>${l.qty}× ${DISH[l.k].n}${l.mods.spice?` <small style="opacity:.7">(${SPICE[l.mods.spice]})</small>`:''}</span><span>${p&&fin(p.done)?'~'+r0(p.done-S.t+e.run)+' min':''}</span></div>`;}).join('')+
+    `<div class="gbig">${fin(e.p50)?`${r0(e.p50+add)}–${Math.ceil(e.p90+add)} min`:'—'}</div><div style="opacity:.85">${W.mode==='together'||del?'Semua hidangan datang bersamaan · All dishes arrive together':'Hidangan diantar saat siap · Served as each dish is ready'}</div>
+    <div style="margin-top:14px;display:flex;justify-content:space-between"><span>Total</span><b>${rp(total)}</b></div><div style="opacity:.7;font-size:12px;margin-top:6px">Bayar di meja dengan QRIS · Pay at table with QRIS</div>`
+    :'<p style="opacity:.8">Order lines and arrival time appear here for the guest to confirm.</p>'}</div>`;
+  const how=`<div class="panel" style="margin-top:16px"><h3>Why each ETA is what it is</h3>
+    <div class="mute" style="line-height:1.65">Every card runs the live engine: <b>ingredient readiness</b> (prepped / needs prep / needs thawing / new batch) → <b>station queue</b> (capacity × cooks, tickets ahead) → <b>cook time</b> (learned from actuals) → <b>plating</b> → <b>run to table</b> (${TABLES[W.table].zone}, ${TABLES[W.table].run}m).<br><br>
+    <b>Try:</b> add 2× Udang Bakar (only 2 portions thawed — the second needs thawing, so its ETA jumps) · order 4× Rendang (3 left in the pot → a new 90-min batch) · Gurame has 1 cleaned fish, the next needs prep · sell out Jus Alpukat to see the substitute · switch the table to GoFood during a rush to see delivery throttling · hit “LPG runs out” and watch wok dishes go unavailable.</div></div>`;
+  return `<div class="grid2"><div>${phone}</div><div>${guest}${how}</div></div>`;
+}
+
+function tkStatus(t){
+  const o=S.orders.find(x=>x.id===t.order);
+  if(t.readyAt>S.t+1e-6) return ['wait',`⏳ ${t.why||'waiting ingredient'} · ${Math.ceil(t.readyAt-S.t)}m`];
+  if(t.fireAt>S.t+1e-6) return ['wait',`🕒 Fires in ${Math.ceil(t.fireAt-S.t)}m · ${o&&o.throttled&&t.fireAt-o.created<=S.cfg.throttleDelay+0.01?'delivery throttled':'held for table sync'}`];
+  if(overdue(t)) return ['over','⚠ Over max-wait — priority'];
+  if(cap(t.st)===0) return ['over','Station down'];
+  return ['', 'Ready to start · waiting for slot'];
+}
+function viewKitchen(){
+  projectAll();
+  const cols=Object.keys(S.st).map(s=>{
+    const st=S.st[s], c=cap(s);
+    const cooking=S.tasks.filter(t=>t.st===s&&t.state==='cooking');
+    const batches={}; cooking.forEach(t=>(batches[t.batch]=batches[t.batch]||[]).push(t));
+    const ck=Object.values(batches).map(g=>{const t=g[0],d=DISH[t.k];const pct=Math.min(100,100*(S.t-t.startAt)/Math.max(0.01,t.endAt-t.startAt));
+      return `<div class="tk cook"><div class="row"><b>${g.length>1?g.length+'× ':''}${d.n}</b><button data-a="bump" data-b="${t.batch}" style="padding:1px 7px;font-size:11px">Bump</button></div>
+      <div class="mute">${[...new Set(g.map(x=>x.table))].join(', ')}${t.mods.spice?' · 🌶 '+SPICE[t.mods.spice]:''}${t.mods.wd?' · well done':''}${t.mods.less?' · less sugar':''}</div><div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="mute">est. done ${clock(t.estEnd)}${g.length>1?' · batched':''}</div></div>`;}).join('');
+    const q=S.tasks.filter(t=>t.st===s&&t.state==='queued').sort((a,b)=>((fin(a.projStart)?a.projStart:1e9)-(fin(b.projStart)?b.projStart:1e9))||cmp(a,b));
+    const qq=q.map(t=>{const [cls,txt]=tkStatus(t),d=DISH[t.k];return `<div class="tk ${cls}"><div class="row"><b>${d.n}</b><span class="mute">${t.table}</span></div><div class="mute">${txt}</div><div class="mute">proj. start ${fin(t.projStart)?clock(t.projStart):'—'} · done ${fin(t.projEnd)?clock(t.projEnd):'—'}</div></div>`;}).join('');
+    return `<div class="col"><h4><span>${st.n}</span><span class="mute">${c===0?'<span class="chip r">DOWN</span>':`${new Set(cooking.map(t=>t.batch)).size}/${c} active`}</span></h4>
+      <div style="padding:6px 12px;border-bottom:1px solid var(--line)" class="row"><span class="mute">Cooks: <b>${st.cooks}</b> · slots ${st.slots-st.down}</span><span><button data-a="cooks" data-s="${s}" data-d="-1">−</button> <button data-a="cooks" data-s="${s}" data-d="1">+</button></span></div>
+      <div class="body"><div class="sect">Cooking</div>${ck||'<div class="empty">idle</div>'}<div class="sect">Queue (engine order)</div>${qq||'<div class="empty">empty</div>'}</div></div>`;
+  }).join('');
+  const open=S.orders.filter(o=>o.served==null);
+  const expo=open.map(o=>{const ts=S.tasks.filter(t=>t.order===o.id&&!DISH[t.k].drink); if(!ts.length) return '';
+    const rd=ts.filter(t=>t.state==='ready'||t.state==='served').length; if(!rd) return '';
+    const waitingOn=ts.filter(t=>t.state==='queued'||t.state==='cooking').map(t=>DISH[t.k].n);
+    return `<div class="tk ${rd===ts.length?'rdy':''}"><div class="row"><b>${o.table} · #${o.id}</b><span>${rd}/${ts.length}</span></div><div class="mute">${rd===ts.length?(o.mode==='together'?'🔔 Complete — runner go':'Serving'):`Holding · waiting on ${waitingOn.join(', ')}`}</div></div>`;}).join('');
+  return `<div class="kitchen">${cols}<div class="col"><h4>Expo / pass</h4><div class="body">${expo||'<div class="empty">Nothing at the pass</div>'}</div></div></div>
+  <p class="mute" style="margin-top:12px">Queue order follows the active strategy (<b>${{sync:'Table-sync + max-wait cap',fifo:'First-in first-out',sjf:'Shortest-job-first'}[S.cfg.strategy]}</b>). Identical dishes are batched automatically (e.g. 3× Nasi Goreng in one wok). “Bump” marks a batch done early. Use −/+ to change cooks per station and watch every ETA move.</p>`;
+}
+function viewPrep(){
+  const rows=Object.keys(S.ing).map(k=>{const g=S.ing[k], pend=S.prep.filter(j=>j.ing===k&&j.state!=='done');
+    const pct=Math.max(0,Math.min(100,100*g.p/Math.max(g.th*2,g.pb||10,1)));
+    const col=g.p<=0?'var(--red)':g.p<g.th?'var(--amb)':'var(--grn)';
+    return `<tr><td><b>${g.n}</b><div class="mute">${g.pt?`prep ${g.pt}m / ${g.pb} ${g.u}`:'no prep step'}${g.tt?` · thaw ${g.tt}m`:''}${g.th?` · auto-prep below ${g.th}`:''}</div></td>
+      <td style="white-space:nowrap"><span class="lvl"><i style="width:${pct}%;background:${col}"></i></span>${g.p<0?`<span class="chip r">owed ${-g.p}</span>`:`<b>${g.p}</b> ${g.u}`}</td><td>${g.r}</td><td>${g.f}</td>
+      <td>${pend.map(j=>`<span class="chip ${j.auto?'b':'a'}">${j.state==='running'?'▶':'⏸'} ${j.src==='frozen'?'thaw+prep':reasonOf(g,j.src)} ${j.units} → ${clock(j.end)}</span>`).join('')||'<span class="mute">—</span>'}</td>
+      <td style="white-space:nowrap"><button data-a="waste" data-k="${k}" title="Stock count correction / spoilage">−1</button> <button data-a="supply" data-k="${k}">+ Supplier</button> ${g.pb?`<button data-a="prepnow" data-k="${k}">Prep now</button>`:''}</td></tr>`;}).join('');
+  return `<div class="panel"><h3>Two-tier inventory: prepped (ready to cook) vs raw / frozen</h3>
+    <p class="mute">Every order deducts ingredients the moment it is placed. If prepped stock is short, the engine schedules prep or thawing and pushes that delay into the dish ETA. When prepped stock falls below its threshold, an auto-prep job (blue) is created before guests feel it; order-triggered jobs are amber. Use <b>−1</b> to simulate a count correction or spoilage.</p>
+    <div class="tblwrap"><table><thead><tr><th>Ingredient</th><th>Prepped</th><th>Raw</th><th>Frozen</th><th>Prep / thaw jobs</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function viewFloor(){
+  projectAll();
+  const open=S.orders.filter(o=>o.served==null), done=S.orders.filter(o=>o.served!=null).slice(-8).reverse();
+  const card=o=>{const ts=S.tasks.filter(t=>t.order===o.id), run=TABLES[o.table].run, food=ts.filter(t=>!DISH[t.k].drink), base=food.length?food:ts;
+    const live=Math.max(...base.map(t=>t.state==='served'?t.servedAt:t.state==='ready'?Math.max(S.t,t.readyTime+run):((t.state==='cooking'?Math.max(t.estEnd,S.t+0.3):t.projEnd)+run)));
+    const liveIn=live-S.t, promised=o.created+o.p90, slip=fin(live)&&live>promised+0.05;
+    const srv=ts.filter(t=>t.state==='served').length;
+    return `<div class="tbl ${slip?'slip':''}"><div class="row"><b>${o.table} · #${o.id}</b><span class="chip ${o.channel==='delivery'?'b':''}">${o.channel}${o.throttled?' · throttled':''}</span></div>
+      <div class="mute" style="margin:4px 0">${ts.map(t=>`${DISH[t.k].n} <span style="opacity:.7">[${t.state}]</span>`).join(' · ')}</div>
+      <div class="row"><span class="mute">Promised by ${clock(promised)}</span><span class="eta ${slip?'s':'f'}">${fin(liveIn)?(liveIn<0.5?'arriving':'~'+r0(liveIn)+'m'):'blocked'}</span></div>
+      <div class="bar"><i style="width:${100*srv/ts.length}%"></i></div>
+      ${slip?`<div class="chip r" style="margin-top:6px">⚠ Slipping past promise — update the guest now</div>`:''}</div>`;};
+  return `<h3 style="margin-top:0">Open orders (${open.length})</h3><div class="floor">${open.map(card).join('')||'<div class="empty">No open orders — place one from the waiter handheld or trigger a rush.</div>'}</div>
+    <h3>Recently completed</h3><div class="floor">${done.map(o=>`<div class="tbl"><div class="row"><b>${o.table} · #${o.id}</b><span class="chip ${o.served-o.created<=o.p90+0.05?'g':'r'}">${(o.served-o.created).toFixed(1)}m</span></div><div class="mute">promised ${rng(o.p50,o.p90)} · ${o.strategy}</div></div>`).join('')||'<div class="empty">—</div>'}</div>`;
+}
+function viewEngine(){
+  const names={sync:'Table-sync + max-wait cap (recommended)',fifo:'First-in first-out',sjf:'Shortest-job-first (pure)'};
+  const rows=Object.keys(names).map(k=>{const st=S.stats.filter(x=>x.strategy===k); if(!st.length) return `<tr><td>${names[k]}</td><td colspan="5" class="mute">no completed orders yet</td></tr>`;
+    const a=f=>st.reduce((s,x)=>s+f(x),0)/st.length;
+    return `<tr><td><b>${names[k]}</b></td><td>${st.length}</td><td>${a(x=>x.dur).toFixed(1)}m</td><td>${a(x=>Math.abs(x.err)).toFixed(1)}m</td><td>${Math.round(100*st.filter(x=>x.on).length/st.length)}%</td><td>${a(x=>x.hold).toFixed(1)}m</td></tr>`;}).join('');
+  const learn=MENU.map(d=>`<tr><td>${d.n}</td><td>${S.st[d.st].n}</td><td>${d.ct}m</td><td><b>${S.learn[d.k].toFixed(2)}×</b></td><td>${(d.ct*S.learn[d.k]).toFixed(1)}m</td></tr>`).join('');
+  return `<div class="g3"><div class="panel"><h3>Sequencing strategy</h3>
+    ${Object.keys(names).map(k=>`<button data-a="strategy" data-v="${k}" class="${S.cfg.strategy===k?'on':''}" style="display:block;width:100%;text-align:left;margin-bottom:6px">${names[k]}</button>`).join('')}
+    <div class="row" style="margin-top:10px"><span>Max-wait cap</span><span><button data-a="cfg" data-v="maxWait" data-d="-1">−</button> <b>${S.cfg.maxWait}m</b> <button data-a="cfg" data-v="maxWait" data-d="1">+</button></span></div>
+    <div class="row" style="margin-top:6px"><span>Throttle delivery when load &gt;</span><span><button data-a="cfg" data-v="throttle" data-d="-0.1">−</button> <b>${Math.round(S.cfg.throttle*100)}%</b> <button data-a="cfg" data-v="throttle" data-d="0.1">+</button></span></div>
+    <div class="row" style="margin-top:6px"><span>Throttle delay</span><span><button data-a="cfg" data-v="throttleDelay" data-d="-1">−</button> <b>${S.cfg.throttleDelay}m</b> <button data-a="cfg" data-v="throttleDelay" data-d="1">+</button></span></div>
+    <p class="mute">Compare strategies: reset the day, pick one, turn on the peak-hour stream and run ~60 sim minutes at 60×, then reset, switch and repeat.</p></div>
+    <div class="panel"><h3>How the ETA is computed</h3><div class="formula">ingredient_ready = now                 if prepped stock covers it
+                 = end of prep/thaw job  (raw → prep,
+                   frozen → thaw + prep, batch item → new batch)
+start   = max(ingredient_ready, station slot free, fire time)
+          slot free = forward simulation of the station queue,
+          capacity = min(slots up, cooks × parallel per cook)
+cook    = recipe time × learned factor
+          (+ modifiers; batch of n = ×(1 + 0.25·(n−1)))
+dish    = start + cook + plating
+table   = max(dish) + run time to zone   (serve together)
+promise = P50 … P50×1.2 + 2 min          (shown as a range)
+fire    = table_target − cook − plating  (quick dishes held so
+                                          everything lands together)</div></div></div>
+    <div class="panel" style="margin-top:16px"><h3>Strategy scorecard</h3><div class="tblwrap"><table><thead><tr><th>Strategy</th><th>Orders</th><th>Avg ticket</th><th>Avg ETA error</th><th>Within promise</th><th>Food waiting at pass</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="mute">“Food waiting at pass” = minutes finished dishes sit before the rest of the table is ready (cold food). Table-sync is designed to drive this toward zero; pure shortest-job-first finishes quick dishes early and lets them go cold.</p></div>
+    <div class="g3" style="margin-top:16px"><div class="panel"><h3>Learning from actual cook times</h3><p class="mute">The wok here is secretly ~15% slower than the recipe card says. Watch the wok dishes' factor drift above 1.00 as orders complete — ETAs self-correct.</p><div class="tblwrap"><table><thead><tr><th>Dish</th><th>Station</th><th>Recipe</th><th>Learned</th><th>Now est.</th></tr></thead><tbody>${learn}</tbody></table></div></div>
+    <div class="panel"><h3>Engine event log</h3><div class="log">${S.log.map(l=>`<div>${l}</div>`).join('')}</div></div></div>`;
+}
+function render(){
+  renderTop();
+  const v={waiter:viewWaiter,kitchen:viewKitchen,prep:viewPrep,floor:viewFloor,engine:viewEngine}[S.tab];
+  const el=document.getElementById('view');
+  const keep=['.menu','.cart','.log'].map(s=>{const x=el.querySelector(s);return x?x.scrollTop:0;});
+  el.innerHTML=v();
+  ['.menu','.cart','.log'].forEach((s,i)=>{const x=el.querySelector(s); if(x) x.scrollTop=keep[i];});
+}
+function act(a,ds){
+  const i=+ds.i;
+  switch(a){
+    case 'pause': S.paused=!S.paused; break;
+    case 'speed': S.speed=+ds.v; S.paused=false; break;
+    case 'tab': S.tab=ds.v; window.scrollTo(0,0); break;
+    case 'table': W.table=ds.v; break;
+    case 'cat': W.cat=ds.v; break;
+    case 'add': { if(portions(DISH[ds.k])<=0){toast('Not enough stock');break;}
+      const ex=W.cart.findIndex(l=>l.k===ds.k&&!l.mods.wd&&!l.mods.spice&&!l.mods.less);
+      if(ex>=0) W.cart[ex].qty++; else W.cart.push({k:ds.k,qty:1,mods:{spice:0}}); break; }
+    case 'inc': if(portions(DISH[W.cart[i].k])>0) W.cart[i].qty++; else toast('No more stock for this dish'); break;
+    case 'dec': W.cart[i].qty--; if(W.cart[i].qty<=0) W.cart.splice(i,1); break;
+    case 'spice': W.cart[i].mods.spice=((W.cart[i].mods.spice||0)+1)%SPICE.length; break;
+    case 'wd': W.cart[i].mods.wd=!W.cart[i].mods.wd; break;
+    case 'less': W.cart[i].mods.less=!W.cart[i].mods.less; break;
+    case 'mode': W.mode=ds.v; break;
+    case 'place': { const o=placeOrder(W.table,expand(),W.mode); if(o){toast(`Order #${o.id} sent · ${rng(o.p50,o.p90)}`); W.cart=[];} else toast('Cannot place — check stock or station status'); break; }
+    case 'bump': S.tasks.filter(t=>t.batch==+ds.b&&t.state==='cooking').forEach(t=>{t.endAt=S.t;t.bumped=true;}); break;
+    case 'cooks': { const st=S.st[ds.s]; st.cooks=Math.max(0,st.cooks+(+ds.d)); log(`${st.n}: cooks set to ${st.cooks}`); break; }
+    case 'rushnow': { let n=0; ['T1','T2','T3','T4','T5','T6','VIP'].sort(()=>Math.random()-.5).slice(0,4).forEach(t=>{if(placeOrder(t,randomUnits(2+Math.floor(Math.random()*4)),'together')) n++;}); toast(`Rush: ${n} tables ordered`); break; }
+    case 'auto': S.auto[ds.v]=!S.auto[ds.v]; if(ds.v==='rush') S.nextRush=S.t; else S.nextDel=S.t; break;
+    case 'sc': {
+      const v=ds.v;
+      if(v==='jumat'){S.sc.jumat=!S.sc.jumat; S.st.wok.cooks=Math.max(0,S.st.wok.cooks+(S.sc.jumat?-1:1)); log(S.sc.jumat?'🕌 Jumatan: wok down to 1 cook — ETAs recalculated':'Jumatan over — wok back to full crew');}
+      if(v==='burner'){S.sc.burner=!S.sc.burner; S.st.wok.down=S.sc.burner?1:0; log(S.sc.burner?'Wok burner down — capacity reduced':'Wok burner repaired');}
+      if(v==='lpg'){ if(S.lpgFixAt!=null) break; if(!S.sc.lpg){S.sc.lpg=true;S.st.wok.lpgOut=true;log('🔥 LPG empty on wok line — wok tickets blocked, menu shows “station down”');} else {S.lpgFixAt=S.t+5;log('Swapping LPG cylinder (5m)…');} }
+      break; }
+    case 'reset': init(); W.cart=[]; seed(); break;
+    case 'strategy': S.cfg.strategy=ds.v; log(`Strategy switched to <b>${ds.v}</b>`); break;
+    case 'cfg': { const k=ds.v; S.cfg[k]=+(Math.max(k==='throttle'?0.3:1,S.cfg[k]+(+ds.d))).toFixed(2); break; }
+    case 'waste': { const g=S.ing[ds.k]; if(g.p>0){g.p--; log(`Stock count: −1 <b>${g.n}</b>`);} break; }
+    case 'supply': { const g=S.ing[ds.k]; const n=g.pb||10; if(g.pb) g.r+=n; else g.p+=n; log(`🚚 Supplier delivery: +${n} <b>${g.n}</b>`); break; }
+    case 'prepnow': { const j=makeAutoPrep(ds.k); if(j){j.auto=false; log(`Manual prep: <b>${S.ing[ds.k].n}</b> ready ${clock(j.end)}`);} else toast('No raw or frozen stock to prep'); break; }
+  }
+  render();
+}
+function seed(){ // lunch service already in progress
+  placeOrder('T2',[{k:'ayambakar',mods:{}},{k:'nasgor',mods:{}},{k:'esteh',mods:{}}],'together');
+  placeOrder('T5',[{k:'gurame',mods:{spice:2}},{k:'kangkung',mods:{}},{k:'nasgor',mods:{}}],'together');
+  placeOrder('GoFood',[{k:'miegor',mods:{}},{k:'ayamgoreng',mods:{}}],'together');
+}
+init(); seed();
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]'); if(b) act(b.dataset.a,b.dataset);});
+// Don't redraw while a finger/mouse is down, so taps are never lost on touchscreens
+let pressing=false, releaseT;
+document.addEventListener('pointerdown',()=>{pressing=true;clearTimeout(releaseT);},true);
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,()=>{clearTimeout(releaseT);releaseT=setTimeout(()=>pressing=false,120);},true));
+let last=performance.now();
+setInterval(()=>{const now=performance.now(), dtr=Math.min(2,(now-last)/1000); last=now;
+  if(!S.paused){ let dt=dtr*S.speed/60; while(dt>1e-9){const s=Math.min(dt,0.25); tick(s); dt-=s;} }
+  if(!pressing) render();},400);
+render();
+</script>
+</body>
+</html>
